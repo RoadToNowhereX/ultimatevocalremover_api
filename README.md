@@ -16,7 +16,7 @@ git clone https://github.com/NextAudioGen/ultimatevocalremover_api.git
 cd ultimatevocalremover_api
 pip install .
 ```
-# Usage
+# Usage (Demucs)
 ```python
 import uvr
 from uvr import models
@@ -29,7 +29,7 @@ import numpy as np
 models_json = json.load(open("/content/ultimatevocalremover_api/src/models_dir/models.json", "r"))
 download_all_models(models_json)
 name = {name_of_your_audio}
-device = "cuda"
+device = "cpu"
     
 demucs = models.Demucs(name="hdemucs_mmi", other_metadata={"segment":2, "split":True}, device=device, logger=None)
 
@@ -44,6 +44,44 @@ sample_rate = 44100
 vocals_numpy = vocals.detach().cpu().np()
 vocals_numpy = vocals_numpy.T
 sf.write({path_to_output_file}, vocals_numpy, sample_rate, format="WAV")
+```
+# Usage (MDX)
+```
+import uvr
+from uvr import models
+from uvr.utils.get_models import download_all_models
+import torch
+import soundfile as sf
+import json
+import numpy as np
+
+models_json = json.load(open("/content/ultimatevocalremover_api/src/models_dir/models.json", "r"))
+download_all_models(models_json)
+name = {name_of_your_audio}
+
+init_other_metadata = {
+            'segment_size': 256,
+            'overlap': 0.75,
+            'mdx_batch_size': 1,
+            'semitone_shift': 0,
+            'adjust': 1.08, 
+            'denoise': False,
+            'is_invert_spec': False,
+            'is_match_frequency_pitch': True,
+            'overlap_mdx': None
+        }
+    
+mdx = models.MDX(name="hdemucs_mmi", other_metadata=init_other_metadata, logger=None)
+
+# Separating an audio file
+res = mdx(name)
+vocals = res["vocals"]
+base = res["bass"]
+drums = res["drums"]
+other = res["other"]
+
+sample_rate = 44100
+sf.write({path_to_output_file}, vocals.T, sample_rate, format="WAV")
 ```
 # Archetecture:
 ```text
