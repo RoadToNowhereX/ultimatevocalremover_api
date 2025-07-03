@@ -22,8 +22,9 @@ import uvr
 from uvr import models
 from uvr.utils.get_models import download_all_models
 import torch
-import audiofile
+import soundfile as sf
 import json
+import numpy as np
 
 models_json = json.load(open("/content/ultimatevocalremover_api/src/models_dir/models.json", "r"))
 download_all_models(models_json)
@@ -34,11 +35,15 @@ demucs = models.Demucs(name="hdemucs_mmi", other_metadata={"segment":2, "split":
 
 # Separating an audio file
 res = demucs(name)
-seperted_audio = res["separated"]
-vocals = seperted_audio["vocals"]
-base = seperted_audio["bass"]
-drums = seperted_audio["drums"]
-other = seperted_audio["other"]
+vocals = res["vocals"]
+base = res["bass"]
+drums = res["drums"]
+other = res["other"]
+
+sample_rate = 44100
+vocals_numpy = vocals.detach().cpu().np()
+vocals_numpy = vocals_numpy.T
+sf.write({path_to_output_file}, vocals_numpy, sample_rate, format="WAV")
 ```
 # Archetecture:
 ```text
