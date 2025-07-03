@@ -87,31 +87,41 @@ def model_exists_in_package(model_name:str, model_arch:str, save_path:str=None, 
 
 
 def get_model_path(model_name: str, model_dir: str) -> Optional[str]:
-    """Get model path if exists in the dir
-
-    Args:
-        model_name (str): model name.
-        model_dir (str): model directory.
-
-    Returns:
-        str: Path of the model file if the model file exists, None otherwise
+    """
+    Get model path. Handles cases where the model is inside a subdirectory
+    with the same name.
     """
     if not os.path.exists(model_dir):
         return None
 
-    name, extension = os.path.splitext(model_name)
-
+    # 检查 model_name 是否已经包含扩展名
+    base_name, extension = os.path.splitext(model_name)
     if extension:
         path = os.path.join(model_dir, model_name)
-        if os.path.exists(path):
+        if os.path.exists(path) and os.path.isfile(path): # 确保是文件
             return path
         return None
 
+    # 如果 model_name 没有扩展名，则开始搜索
+    
+    # 优先检查是否存在一个与 model_name 同名的子目录
+    potential_model_subdir = os.path.join(model_dir, model_name)
+    if os.path.isdir(potential_model_subdir):
+        # 如果是目录，则在该目录内寻找模型文件（例如 .onnx, .pth 等）
+        for file in os.listdir(potential_model_subdir):
+            # 你可以根据需要寻找特定的扩展名，这里以 .onnx 为例
+            if file.endswith(('.onnx', '.pth', '.ckpt')):
+                return os.path.join(potential_model_subdir, file)
+        # 如果目录内没有找到模型文件，可以返回目录路径或None，取决于后续逻辑
+        # 在这个报错场景下，我们应该继续寻找，而不是返回目录
+        
+    # 如果没有同名子目录，或者子目录里没找到，就在当前目录继续寻找文件
     for file in os.listdir(model_dir):
-        name, extension = os.path.splitext(file)
-        if name == model_name:
-            file_name = name + extension
-            return os.path.join(model_dir, file_name)
+        if os.path.isfile(os.path.join(model_dir, file)): # 只检查文件，忽略子目录
+            file_basename, _ = os.path.splitext(file)
+            if file_basename == model_name:
+                return os.path.join(model_dir, file)
+
     return None
 
 """
