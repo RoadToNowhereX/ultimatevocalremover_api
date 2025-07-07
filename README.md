@@ -12,7 +12,7 @@ This is a an API for ultimate vocal removing. It is designed to be expandable wi
 # Install
 If you intend to edit the code
 ```bash
-git clone https://github.com/NextAudioGen/ultimatevocalremover_api.git
+git clone https://github.com/RoadToNowhereX/ultimatevocalremover_api.git
 cd ultimatevocalremover_api
 pip install .
 ```
